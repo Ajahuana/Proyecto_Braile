@@ -29,17 +29,25 @@ const libros = ref([])
 const seleccionados = ref([])
 const opciones = ref([])
 
+function brailleADecimal(char) {
+  // Obtener el código Unicode del caracter
+  const code = char.charCodeAt(0) - 0x2800 // offset braille
+  return code // es el decimal
+}
+
 function dividirEnLineas(texto) {
   const lineas = []
-  let cleanTexto = texto.replace(/\r?\n/g, '') 
+  // Eliminamos saltos de línea
+  let cleanTexto = texto.replace(/\r?\n/g, '')
   let i = 0
   while (i < cleanTexto.length) {
     let chunk = cleanTexto.slice(i, i + 28)
     if (chunk.length < 28) {
       chunk = chunk.padEnd(28, ' ')
     }
-    const lineaSeparada = chunk.split('').join(',')
-    lineas.push(lineaSeparada)
+    // Convertir cada caracter a decimal braille
+    const lineaDecimal = chunk.split('').map(c => brailleADecimal(c)).join(',')
+    lineas.push(lineaDecimal)
     i += 28
   }
   return lineas
