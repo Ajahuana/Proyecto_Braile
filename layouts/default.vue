@@ -1,7 +1,7 @@
 <template>
   <div class="grid grid-cols-4 gap-2 min-h-screen">
     <SideMenu />
-    <div class="col-span-3">
+    <div class="col-span-3 mt-24">
       <NuxtPage />
     </div>
   </div>
