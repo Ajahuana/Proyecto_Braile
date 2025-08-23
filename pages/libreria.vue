@@ -10,19 +10,22 @@
       <el-table-column prop="titulo" label="Título" />
       <el-table-column prop="autor" label="Autor" />
       <el-table-column prop="contenido" label="Contenido" />
-      <el-table-column prop="traducido" label="Braille" />
+      <el-table-column label="Traducido">
+        <template #default="scope">
+          <el-checkbox :checked="!!scope.row.traducido" disabled />
+        </template>
+      </el-table-column>
+
       <el-table-column label="Acciones">
         <template #default="{ row }">
-          <el-button type="primary" size="small">
-            <NuxtLink :to="`/libro/${row.id}`">Editar</NuxtLink>
-          </el-button>
-          <el-button
-            type="danger"
-            size="small"
-            @click="eliminar(row.id)"
-          >
-            Eliminar
-          </el-button>
+          <div class="flex gap-3">
+            <el-button type="primary" size="small">
+              <NuxtLink :to="`/libro/${row.id}`">Editar</NuxtLink>
+            </el-button>
+            <el-button type="danger" size="small" @click="eliminar(row.id)">
+              Eliminar
+            </el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -30,7 +33,7 @@
 </template>
 
 <script setup>
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, ref } from 'vue'
 
 const libros = ref([])
@@ -46,16 +49,31 @@ const cargarLibros = async () => {
   }
 }
 
-// Eliminar libro
+// Eliminar libro con confirmación
 const eliminar = async (id) => {
-  if (!confirm('¿Seguro que quieres eliminar este libro?')) return
   try {
+    await ElMessageBox.confirm(
+      '¿Seguro que quieres eliminar este libro?',
+      'Confirmación',
+      {
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        type: 'warning',
+      }
+    )
+
+    // Si el usuario confirma
     await $fetch(`${API_URL}/${id}`, { method: 'DELETE' })
     ElMessage.success('Libro eliminado')
     cargarLibros()
   } catch (err) {
-    console.error(err)
-    ElMessage.error('Error al eliminar libro')
+    // Si se cancela, no hacemos nada
+    if (err === 'cancel') {
+      ElMessage.info('Eliminación cancelada')
+    } else {
+      console.error(err)
+      ElMessage.error('Error al eliminar libro')
+    }
   }
 }
 
