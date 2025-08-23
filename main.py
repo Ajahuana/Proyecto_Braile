@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
 from pathlib import Path
 import serial
+import time
 app = FastAPI()
 
 # Permitir peticiones desde tu frontend
@@ -128,3 +129,15 @@ def get_libro(libro_id: int):
         "estado": row[5],
     }
 # GET: obtener libros traducidos
+@app.post("/imprimir")
+async def imprimir_bloque(bloque: dict):
+    """
+    Recibe un bloque de 30 filas, espera 5 segundos y responde.
+    """
+    print("📥 Recibido bloque:", bloque)
+
+    # Simula tiempo de impresión
+    time.sleep(5)
+
+    return {"status": "ok", "mensaje": "Bloque impreso correctamente"}
+
