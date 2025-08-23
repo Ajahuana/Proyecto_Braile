@@ -98,17 +98,18 @@ def update_libro(libro_id: int, libro: dict):
 
 
 # DELETE: eliminar un libro
-@app.delete("/libros")
-def delete_libro(libro: dict):
+@app.delete("/libros/{id}")
+def delete_libro(id: int):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("DELETE FROM libros WHERE id=?", (libro.get("id"),))
+    c.execute("DELETE FROM libros WHERE id=?", (id,))
     if c.rowcount == 0:
         conn.close()
         raise HTTPException(status_code=404, detail="Libro no encontrado")
     conn.commit()
     conn.close()
     return {"success": True}
+
 # GET: obtener un libro por ID
 @app.get("/libros/{libro_id}")
 def get_libro(libro_id: int):
