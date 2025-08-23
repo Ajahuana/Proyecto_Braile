@@ -23,55 +23,11 @@ import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'
 
 const API_URL = 'http://127.0.0.1:8000/libros'
-const API_PRINT = 'http://127.0.0.1:8000/imprimir'
+const libros = ref([])          // todos los libros con datos completos
+const seleccionados = ref([])   // ids que están en la lista derecha
+const opciones = ref([])        // opciones para transfer
 
-const libros = ref([])
-const seleccionados = ref([])
-const opciones = ref([])
-
-function brailleADecimal(char) {
-  // Obtener el código Unicode del caracter
-  const code = char.charCodeAt(0) - 0x2800 // offset braille
-  return code // es el decimal
-}
-
-function dividirEnLineas(texto) {
-  const lineas = []
-  // Eliminamos saltos de línea
-  let cleanTexto = texto.replace(/\r?\n/g, '')
-  let i = 0
-  while (i < cleanTexto.length) {
-    let chunk = cleanTexto.slice(i, i + 28)
-    if (chunk.length < 28) {
-      chunk = chunk.padEnd(28, ' ')
-    }
-    // Convertir cada caracter a decimal braille
-    const lineaDecimal = chunk.split('').map(c => brailleADecimal(c)).join(',')
-    lineas.push(lineaDecimal)
-    i += 28
-  }
-  return lineas
-}
-
-
-function dividirEnBloques(lineas) {
-  const bloques = []
-  let i = 0
-  while (i < lineas.length) {
-    let bloque = lineas.slice(i, i + 30)
-    while (bloque.length < 30) {
-      bloque.push(' '.repeat(28).split('').join(','))
-    }
-    const bloqueConIds = bloque.map((linea, idx) => ({
-      id: idx + 1,
-      linea
-    }))
-    bloques.push(bloqueConIds)
-    i += 30
-  }
-  return bloques
-}
-
+// Cargar libros desde FastAPI
 const cargarLibros = async () => {
   try {
     libros.value = await $fetch(API_URL)
@@ -82,46 +38,30 @@ const cargarLibros = async () => {
   }
 }
 
-const enviarBloques = async (bloques) => {
-  for (let i = 0; i < bloques.length; i++) {
-    try {
-      const res = await fetch(API_PRINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bloque: bloques[i] })
-      })
-      const data = await res.json()
-      console.log(`✅ Respuesta bloque ${i + 1}:`, data)
-      ElMessage.success(`Bloque ${i + 1} impreso correctamente`)
-    } catch (err) {
-      console.error(err)
-      ElMessage.error(`Error al imprimir bloque ${i + 1}`)
-      break
-    }
-  }
-}
-
+// Función imprimir
 const imprimir = () => {
   if (seleccionados.value.length === 0) {
     ElMessage.warning('No hay libros en la lista de "Para imprimir"')
     return
   }
+
+  // Obtener TODOS los que están en la lista derecha
   const paraImprimir = libros.value.filter(l =>
     seleccionados.value.includes(l.id)
   )
-  const resultadoFinal = []
-  paraImprimir.forEach(libro => {
-    const lineas = dividirEnLineas(libro.traducido || '')
-    const bloques = dividirEnBloques(lineas)
-    bloques.forEach(b => resultadoFinal.push(b))
-  })
-  console.log('📄 Resultado final para impresión:', resultadoFinal)
 
-  enviarBloques(resultadoFinal)
+  // Construir JSON
+  const resultado = paraImprimir.map(l => ({
+    id: l.id,
+    titulo: l.titulo,
+    traducido: l.traducido
+  }))
+
+  console.log('📄 Libros para imprimir:', resultado)
+  ElMessage.success(`Se enviaron ${resultado.length} libros a impresión`)
 }
 
 onMounted(() => {
   cargarLibros()
 })
 </script>
-

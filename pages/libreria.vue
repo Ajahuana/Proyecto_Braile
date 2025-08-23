@@ -1,10 +1,6 @@
 <template>
   <div class="p-4">
-    <div class="flex justify-end mb-2">
-      <el-button type="primary" size="small">
-        <NuxtLink :to="`/`">Registrar</NuxtLink>
-      </el-button>
-    </div>
+    
 
     <el-table :data="libros" style="width: 100%">
       <el-table-column prop="titulo" label="Título" />
