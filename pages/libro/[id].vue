@@ -55,7 +55,6 @@ const cargarLibro = async () => {
     autor.value = libroData.autor
     contenido.value = libroData.contenido
     console.log('Libro cargado:', libroData);
-    
   } catch (err) {
     console.error(err)
     ElMessage.error('Error al cargar el libro')
@@ -65,11 +64,18 @@ const cargarLibro = async () => {
 // actualizar libro en FastAPI
 const actualizarLibro = async () => {
   try {
+    // Normalizar traducción: reemplazar líneas vacías por ⠿
+    let traduccionNormalizada = traducido.value
+      .split("\n")
+      .map(linea => linea.trim() === "" ? "⠿".repeat(29) : linea)
+      .join("\n")
+      .replace(/\r/g, "")
+
     const body = {
       titulo: titulo.value,
       autor: autor.value,
       contenido: contenido.value,
-      traducido: traducido.value,
+      traducido: traduccionNormalizada,
       estado: 1
     }
 
