@@ -43,28 +43,39 @@ const API_URL = 'http://127.0.0.1:8000/libros'  // tu backend FastAPI
 
 const guardarLibro = async () => {
   try {
+    // Normalizar traducción: quitar saltos de línea vacíos
+    let traduccionNormalizada = traducido.value
+      .split("\n")              // separar por líneas
+      .map(linea => {
+        // Si la línea está vacía o solo espacios, rellenar con ⠿
+        return linea.trim() === "" ? "⠿".repeat(29) : linea
+      })
+      .join("\n")               // volver a unir
+      .replace(/\r/g, "")       // quitar \r si existe
+
     const body = {
       titulo: titulo.value,
       autor: autor.value,
       contenido: libro.value,
-      traducido: traducido.value,
+      traducido: traduccionNormalizada,
       estado: 1
     }
 
     const response = await $fetch(API_URL, {
-      method: 'POST',
+      method: "POST",
       body
     })
 
-    if (response.id) { // en FastAPI devolvemos el libro con id
-      ElMessage.success('Libro guardado correctamente')
-      titulo.value = ''
-      autor.value = ''
-      libro.value = ''
+    if (response.id) {
+      ElMessage.success("Libro guardado correctamente")
+      titulo.value = ""
+      autor.value = ""
+      libro.value = ""
     }
   } catch (err) {
     console.error(err)
-    ElMessage.error('Error al guardar el libro')
+    ElMessage.error("Error al guardar el libro")
   }
 }
+
 </script>
