@@ -1,15 +1,17 @@
 <template>
   <div class="p-4">
-    <div class="flex justify-end mb-2">
-      <el-button type="primary" size="small">
-        <NuxtLink :to="`/`">Registrar</NuxtLink>
-      </el-button>
-    </div>
+    
 
     <el-table :data="libros" style="width: 100%">
       <el-table-column prop="titulo" label="Título" />
       <el-table-column prop="autor" label="Autor" />
-      <el-table-column prop="contenido" label="Contenido" />
+      <el-table-column prop="contenido" label="Contenido">
+        <template #default="scope">
+          <div class="line-clamp-3">
+            {{ scope.row.contenido }}
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column label="Traducido">
         <template #default="scope">
           <el-checkbox :checked="!!scope.row.traducido" disabled />
