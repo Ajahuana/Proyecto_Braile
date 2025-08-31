@@ -4,12 +4,42 @@ import sqlite3
 from pathlib import Path
 import serial
 import time
+import json
+
 app = FastAPI()
 
-# Permitir peticiones desde tu frontend
+class ImpresoraBraile:
+    def __init__(self, puerto="COM3", baudrate=115200):
+        self.puerto = puerto
+        self.baudrate = baudrate
+        self.conexion_serie = None
+
+    def conectar(self):
+        try:
+            # Si ya hay conexión y está abierta, no volver a abrir
+            if self.conexion_serie and self.conexion_serie.is_open:
+                print(f"⚡ El puerto {self.puerto} ya está abierto, usando la conexión existente.")
+                return True
+
+            print(f"🔌 Intentando conectar con impresora en {self.puerto}...")
+            self.conexion_serie = serial.Serial(port=self.puerto, baudrate=self.baudrate, timeout=1)
+
+            if self.conexion_serie.is_open:
+                print(f"✅ Conexión establecida con {self.puerto}")
+                time.sleep(1)  # Espera para estabilizar conexión
+                return True
+            else:
+                print(f"❌ No se pudo abrir {self.puerto}")
+                return False
+
+        except Exception as e:
+            print(f"⚠️ Error al conectar con {self.puerto}: {e}")
+            return False
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -35,9 +65,13 @@ def init_db():
 
 init_db()
 
-# --- Endpoints ---
+# -------------------------------
+# 🚀 Instancia global de impresora
+# -------------------------------
+impresora = ImpresoraBraile()
+impresora.conectar()
 
-# GET: obtener todos los libros
+# --- Endpoints CRUD de libros (NO TOCADOS) ---
 @app.get("/libros")
 def get_libros():
     conn = sqlite3.connect(DB_PATH)
@@ -50,7 +84,6 @@ def get_libros():
         for r in rows
     ]
 
-# POST: agregar un libro
 @app.post("/libros")
 def add_libro(libro: dict):
     conn = sqlite3.connect(DB_PATH)
@@ -70,7 +103,6 @@ def add_libro(libro: dict):
     conn.close()
     return {"success": True, "id": libro_id}
 
-# PUT: actualizar un libro
 @app.put("/libros/{libro_id}")
 def update_libro(libro_id: int, libro: dict):
     conn = sqlite3.connect(DB_PATH)
@@ -87,7 +119,7 @@ def update_libro(libro_id: int, libro: dict):
             libro.get("contenido"),
             libro.get("traducido"),
             libro.get("estado", 1),
-            libro_id,   # <- se usa el id de la URL
+            libro_id,
         )
     )
     if c.rowcount == 0:
@@ -97,8 +129,6 @@ def update_libro(libro_id: int, libro: dict):
     conn.close()
     return {"success": True}
 
-
-# DELETE: eliminar un libro
 @app.delete("/libros")
 def delete_libro(libro: dict):
     conn = sqlite3.connect(DB_PATH)
@@ -110,7 +140,7 @@ def delete_libro(libro: dict):
     conn.commit()
     conn.close()
     return {"success": True}
-# GET: obtener un libro por ID
+
 @app.get("/libros/{libro_id}")
 def get_libro(libro_id: int):
     conn = sqlite3.connect(DB_PATH)
@@ -128,16 +158,31 @@ def get_libro(libro_id: int):
         "traducido": row[4],
         "estado": row[5],
     }
-# GET: obtener libros traducidos
+
+# --- Endpoint de impresión ---
 @app.post("/imprimir")
 async def imprimir_bloque(bloque: dict):
     """
-    Recibe un bloque de 30 filas, espera 5 segundos y responde.
+    Recibe un bloque JSON, lo envía a la impresora
+    y espera hasta recibir "TRUE".
     """
     print("📥 Recibido bloque:", bloque)
 
-    # Simula tiempo de impresión
-    time.sleep(5)
+    if not impresora.conexion_serie or not impresora.conexion_serie.is_open:
+        if not impresora.conectar():
+            raise HTTPException(status_code=500, detail="No se pudo conectar con la impresora")
 
-    return {"status": "ok", "mensaje": "Bloque impreso correctamente"}
+    # Enviar bloque como JSON
+    json_str = json.dumps(bloque)
+    impresora.conexion_serie.write(json_str.encode())
 
+    print("⏳ Esperando respuesta de la impresora...")
+
+    while True:
+        if impresora.conexion_serie.in_waiting > 0:
+            mensaje = impresora.conexion_serie.readline().decode(errors="ignore").strip()
+            if mensaje == "TRUE":
+                print("✅ Impresión confirmada")
+                return {"status": "ok", "mensaje": "Bloque impreso correctamente"}
+            else:
+                print("📤 Mensaje recibido:", mensaje)
