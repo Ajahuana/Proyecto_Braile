@@ -1,6 +1,14 @@
 <template>
   <div class="p-4">
-
+    <el-select v-model="com" placeholder="Select" style="width: 240px">
+      <el-option
+          v-for="i in 15"
+          :key="`COM${i}`"
+          :label="`COM${i}`"
+          :value="`COM${i}`"
+      />
+    </el-select>
+    <el-button type="primary" @click="conectarImpresora">Conectar</el-button>
     <el-transfer
       v-model="seleccionados"
       :data="opciones"
@@ -32,10 +40,32 @@ const API_PRINT = 'http://127.0.0.1:8000/imprimir'
 const open = ref(false)
 const page=ref(0)
 const total=ref(0)
-
+const com = ref('')
 const libros = ref([])
 const seleccionados = ref([])
 const opciones = ref([])
+
+async function conectarImpresora() {
+  try {
+    const res = await $fetch('http://localhost:8000/conectar', {
+      method: 'POST',
+      body: { com: com.value }
+    })
+
+    ElMessage({
+      message: res.mensaje,
+      type: res.success ? 'success' : 'error',
+      duration: 3000
+    })
+  } catch (err) {
+    ElMessage({
+      message: '❌ Error al conectar con la API',
+      type: 'error',
+      duration: 3000
+    })
+    console.error(err)
+  }
+}
 
 function brailleADecimal(char) {
   // Obtener el código Unicode del caracter

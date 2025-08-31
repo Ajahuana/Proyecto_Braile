@@ -2,11 +2,15 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
 from pathlib import Path
+from pydantic import BaseModel
 import serial
 import time
 import json
 
 app = FastAPI()
+
+class ConexionRequest(BaseModel):
+    com: str
 
 class ImpresoraBraile:
     def __init__(self, puerto="COM3", baudrate=115200):
@@ -16,25 +20,20 @@ class ImpresoraBraile:
 
     def conectar(self):
         try:
-            # Si ya hay conexión y está abierta, no volver a abrir
             if self.conexion_serie and self.conexion_serie.is_open:
-                print(f"⚡ El puerto {self.puerto} ya está abierto, usando la conexión existente.")
-                return True
+                return {"success": True, "mensaje": f"⚡ El puerto {self.puerto} ya está abierto."}
 
-            print(f"🔌 Intentando conectar con impresora en {self.puerto}...")
             self.conexion_serie = serial.Serial(port=self.puerto, baudrate=self.baudrate, timeout=1)
 
             if self.conexion_serie.is_open:
-                print(f"✅ Conexión establecida con {self.puerto}")
-                time.sleep(1)  # Espera para estabilizar conexión
-                return True
+                time.sleep(1)
+                return {"success": True, "mensaje": f"✅ Conexión establecida con {self.puerto}"}
             else:
-                print(f"❌ No se pudo abrir {self.puerto}")
-                return False
+                return {"success": False, "mensaje": f"❌ No se pudo abrir {self.puerto}"}
 
         except Exception as e:
-            print(f"⚠️ Error al conectar con {self.puerto}: {e}")
-            return False
+            return {"success": False, "mensaje": f"⚠️ Error al conectar con {self.puerto}: {e}"}
+
 
 
 app.add_middleware(
@@ -44,6 +43,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.post("/conectar")
+def conectar_impresora(data: ConexionRequest):
+    impresora = ImpresoraBraile(puerto=data.com)
+    return impresora.conectar()
 DB_PATH = Path("libros.db")
 
 # Inicializar DB y tabla
