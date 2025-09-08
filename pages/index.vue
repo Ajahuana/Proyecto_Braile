@@ -1,7 +1,7 @@
 <template>
   <div class="welcome-message">
     <div class="icon-container">
-      <span class="celebration-icon">🎉</span>
+      <el-icon class="celebration-icon"><Platform /></el-icon>
     </div>
     
     <h2 class="welcome-text">¡Bienvenido al Sistema Braille!</h2>
@@ -13,9 +13,14 @@
   </div>
 </template>
 
+<script setup>
+import { Platform } from '@element-plus/icons-vue';
+
+</script>
+
 <style scoped>
 .welcome-message {
-  background: rgb(241, 239, 239);
+  background: rgb(246, 245, 245);
   border-radius: 40px;
   padding: 4rem;
   text-align: center;
@@ -29,7 +34,8 @@
 }
 
 .celebration-icon {
-  font-size: 2.5rem;
+  font-size: 4rem;
+  color: #4e94c0; /* Color azul consistente con tu app */
 }
 
 .welcome-text {

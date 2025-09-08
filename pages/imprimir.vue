@@ -2,7 +2,9 @@
   <div class="imprimir-fullwidth">
     <div class="content-container">
       <div class="header-section">
-        <h2 class="page-title">Seleccionar libros para imprimir</h2>
+        <h2 class="page-title">
+          <el-icon class="title-icon"><Files /></el-icon>
+          Seleccionar libros para imprimir</h2>
         <p class="page-subtitle">Arrastra los libros que deseas imprimir a la columna de la derecha</p>
       </div>
 
@@ -28,8 +30,8 @@
 </template>
 
 <script setup>
-import { ElMessage } from 'element-plus'
-import { onMounted, ref } from 'vue'
+import { Files } from '@element-plus/icons-vue';
+import { onMounted, ref } from 'vue';
 
 const API_URL = 'http://127.0.0.1:8000/libros'
 const API_PRINT = 'http://127.0.0.1:8000/imprimir'
@@ -163,8 +165,18 @@ onMounted(() => {
 .page-title {
   font-size: 2rem;
   font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 0.5rem 0;
+  color: #103656;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.title-icon {
+  font-size: 2.5rem;
+  color: #0b598a;
+  box-shadow: 0 15px 10px rgba(3, 3, 3, 0.1);
 }
 
 .page-subtitle {
@@ -205,8 +217,8 @@ onMounted(() => {
   font-weight: 600;
   font-size: 20px !important;
   border-radius: 12px 12px 0 0;
-  padding: 20px 16px; /* Aumentar padding vertical de 16px a 20px */
-  height: 60px; /* Agregar altura fija */
+  padding: 20px 16px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
