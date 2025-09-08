@@ -1,31 +1,33 @@
 <template>
-  <div class="grid grid-cols-2 gap-2 p-2">
-    <div>Titulo</div>
-    <div>Autor</div>
+  <div class="transcripcion-fullwidth">
+    <div class="grid grid-cols-2 gap-2 p-2">
+      <div class="label-text">Titulo</div>
+      <div class="label-text">Autor</div>
 
-    <el-input v-model="titulo" />
-    <el-input v-model="autor" />
+      <el-input v-model="titulo" />
+      <el-input v-model="autor" />
 
-    <div>Libro</div>
-    <div>Libro traducido</div>
+      <div class="label-text">Libro</div>
+      <div class="label-text">Libro traducido</div>
 
-    <el-input
-      v-model="libro"
-      type="textarea"
-      :rows="20"
-      class="w-full"
-    />
+      <el-input
+        v-model="libro"
+        type="textarea"
+        :rows="20"
+        class="w-full"
+      />
 
-    <el-input
-      :value="traducido"
-      type="textarea"
-      :rows="20"
-      class="w-full"
-      readonly
-    />
+      <el-input
+        :value="traducido"
+        type="textarea"
+        :rows="20"
+        class="w-full"
+        readonly
+      />
 
-    <div class="col-span-2 flex justify-end mt-2">
-      <el-button type="primary" @click="guardarLibro">Guardar</el-button>
+      <div class="col-span-2 flex justify-end mt-1">
+        <el-button type="primary" @click="guardarLibro">Guardar</el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -79,3 +81,50 @@ const guardarLibro = async () => {
 }
 
 </script>
+
+<style scoped>
+.transcripcion-fullwidth {
+  /* Ocupa todo el espacio disponible sin márgenes */
+  position: absolute;
+  padding: 0;
+  margin: 0;
+  left: 280px;
+  width: calc(100vw - 280px);
+  background-color: #eff0f1;
+}
+
+.transcripcion-fullwidth .grid {
+  min-height: calc(80vh - 10px); 
+  padding: 2%;
+  width: 100%;
+  max-width: 2000px;
+}
+
+.transcripcion-fullwidth .grid {
+  column-gap: 40px; /* Espacio horizontal entre columnas */
+  row-gap: 5px;    /* Espacio vertical entre filas */
+}
+
+.label-text {
+  font-weight: 750;
+  color: #2c3e50;
+  font-size: 20px;
+  margin-bottom: 0.2rem;
+  display:flex ;
+  align-items:end ;
+}
+
+/* Personalizar el botón */
+.transcripcion-fullwidth :deep(.el-button--primary) {
+  background-color: #27ae60; /* Verde */
+  border-color: #27ae60;
+  font-size: 20px; /* Aumentar tamaño de letra */
+  font-weight: 500; /* Hacer la letra más gruesa */
+  padding: 20px 34px; /* Hacer el botón más grande */
+}
+
+.transcripcion-fullwidth :deep(.el-button--primary:hover) {
+  background-color: #38df7e; /* Verde más claro al hacer hover */
+  border-color: #2ecc71;
+}
+</style>
