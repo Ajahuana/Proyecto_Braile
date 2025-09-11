@@ -1,8 +1,8 @@
 <template>
   <div class="common-layout">
-    <el-header class="braille-header" height="80px">
+    <el-header class="braille-header">
       <div class="header-content">
-        <h2 class="header-title" >
+        <h2 class="header-title">
           Interfaz de transcripción, traducción e interpretación de textos Braille
         </h2>
       </div>
@@ -14,45 +14,45 @@
           <el-menu 
             default-active="2" 
             class="custom-sidebar-menu"
-            :collapse="false"
             background-color="#008080"
             text-color="#ecf0f1"
             active-text-color="#3498db"
           >
             <el-menu-item index="1" class="menu-item">
               <el-icon><House /></el-icon>
-              <NuxtLink :to="`/`" class="menu-link">
+              <NuxtLink to="/" class="menu-link">
                 <span>Inicio</span>
               </NuxtLink>
             </el-menu-item>
             
             <el-menu-item index="2" class="menu-item">
               <el-icon><Edit /></el-icon>
-              <NuxtLink :to="`/transcripcion`" class="menu-link">
+              <NuxtLink to="/transcripcion" class="menu-link">
                 <span>Transcripción</span>
               </NuxtLink>
             </el-menu-item>
             
             <el-menu-item index="3" class="menu-item">
               <el-icon><Printer /></el-icon>
-              <NuxtLink :to="`/imprimir`" class="menu-link">
+              <NuxtLink to="/imprimir" class="menu-link">
                 <span>Impresión</span>
               </NuxtLink>
             </el-menu-item>
             
             <el-menu-item index="4" class="menu-item">
               <el-icon><Collection /></el-icon>
-              <NuxtLink :to="`/libreria`" class="menu-link">
+              <NuxtLink to="/libreria" class="menu-link">
                 <span>Biblioteca de libros</span>
               </NuxtLink>
             </el-menu-item>
             
             <el-menu-item index="5" class="menu-item">
               <el-icon><Upload /></el-icon>
-              <NuxtLink :to="`/importar`" class="menu-link">
+              <NuxtLink to="/importar" class="menu-link">
                 <span>Importar texto Word</span>
               </NuxtLink>
             </el-menu-item>
+            
           </el-menu>
         </div>
       </el-aside>
@@ -62,10 +62,10 @@
       </el-main>
     </el-container>
 
-    <el-footer class="braille-footer" height="60px">
+    <el-footer class="braille-footer">
       <div class="footer-content">
         <p class="footer-text">
-          Centro de Rehabilitación Manuela Gandarillas - Contacto: 71717171 - © 2025
+          Sistema Braille - Transcriptor v2.0.0 © 2025 - Centro de Rehabilitacion Manuela Gandarillas
         </p>
       </div>
     </el-footer>
@@ -73,9 +73,7 @@
 </template>
 
 <script lang="ts" setup>
-import { House, Edit, Printer, Collection, Upload } from '@element-plus/icons-vue'
-
-const index = ref('1');
+import { Collection, Edit, House, Printer, Upload } from '@element-plus/icons-vue';
 </script>
 
 <style scoped>
@@ -85,17 +83,16 @@ const index = ref('1');
 }
 
 .braille-header {
-  background: linear-gradient(135deg, #87CEEB 0%, #4A90E2 50%, #6BB6FF 100%);
+  background: linear-gradient(135deg, #78b9d3 0%, #4e94c0 40%, #87CEEB 100%);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
-  padding: 0;
-  z-index: 1001;
-  width: 100%;
+  height: 85px;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
+  z-index: 1001;
 }
 
 .header-content {
@@ -106,7 +103,7 @@ const index = ref('1');
 
 .header-title {
   color: rgb(41, 38, 38);
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 600;
   margin: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -115,18 +112,16 @@ const index = ref('1');
 
 .body-container {
   flex: 1;
-  height: calc(100vh - 140px); 
-  margin-top: 70px; 
-  margin-bottom: 60px; 
+  height: calc(100vh - 140px);
+  margin-top: 80px;
 }
 
 .sidebar-aside {
-  padding: 0;
   overflow: hidden;
 }
 
 .sidebar-container {
-  height: calc(100vh - 140px); /* Altura total menos header y footer */
+  height: 100%;
   width: 250px;
   box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
 }
@@ -138,22 +133,17 @@ const index = ref('1');
 }
 
 .menu-item {
-  margin: 8px 12px;
+  margin: 12px 8px;
   border-radius: 8px;
   transition: all 0.3s ease;
   padding: 0 16px;
-  height: 50px;
+  height: 60px;
   line-height: 50px;
 }
 
 .menu-item:hover {
   background-color: rgba(52, 152, 219, 0.1);
   transform: translateX(5px);
-}
-
-.menu-item.is-active {
-  background-color: rgba(52, 152, 219, 0.2);
-  border-left: 4px solid #3498db;
 }
 
 .menu-link {
@@ -163,28 +153,27 @@ const index = ref('1');
   align-items: center;
   width: 100%;
   height: 100%;
-  padding-left: 8px;
+  padding-left: 4px;
+  font-size: 17px;
 }
 
 .menu-link:hover {
   color: #3498db;
 }
 
-/* Main Content Styles */
 .main-content {
-  background-color: #f8f9fa;
-  padding: 20px;
+  background-color: #eff0f1;
+  padding: 0px;
   overflow-y: auto;
+  width: 100%;
 }
 
 .braille-footer {
-  background-color: #2c3e50;
-  color: #ecf0f1;
+  background-color: #c8f8f9;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
-  padding: 0;
-  width: 100%;
+  height: 80px;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -200,8 +189,8 @@ const index = ref('1');
 
 .footer-text {
   margin: 0;
-  font-size: 14px;
-  color: #bdc3c7;
+  font-size: 15px;
+  color: #060606;
 }
 
 :deep(.el-icon) {
@@ -222,35 +211,16 @@ const index = ref('1');
   border-radius: 0 8px 8px 0;
 }
 
-/* Hover effects - Manteniendo tu código */
 :deep(.el-menu-item:hover) {
   background-color: rgba(52, 152, 219, 0.1) !important;
   color: #3498db !important;
 }
 
-/* Remover estilos por defecto de Element Plus */
 :deep(.el-menu-item) {
   border-bottom: none !important;
 }
 
-/* Remove default Element Plus padding */
-:deep(.el-header) {
-  padding: 0;
-}
-
-:deep(.el-footer) {
-  padding: 0;
-}
-
-:deep(.el-aside) {
-  padding: 0;
-}
-
-:deep(.el-main) {
-  padding: 0;
-}
-
-/* Responsive - Manteniendo tu código original */
+/* Responsive */
 @media (max-width: 768px) {
   .sidebar-container {
     width: 200px;
@@ -292,6 +262,7 @@ const index = ref('1');
   
   .body-container {
     height: calc(100vh - 120px);
+    margin-top: 70px;
   }
   
   .sidebar-aside {
@@ -303,7 +274,7 @@ const index = ref('1');
   }
 }
 
-/* Scrollbar customization for main content */
+/* Scrollbar customization */
 .main-content::-webkit-scrollbar {
   width: 8px;
 }
