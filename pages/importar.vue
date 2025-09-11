@@ -379,7 +379,7 @@ const saveAsBook = async (file) => {
   background: white;
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 4px 12px rg
+  box-shadow: 0 4px 12px
 }
 
 .section-title {
@@ -502,6 +502,5 @@ const saveAsBook = async (file) => {
 }
 </style>
 
-  <h1>Importar</h1>
-</template>
+
 

@@ -4,58 +4,48 @@
       <div class="header-section">
         <h2 class="page-title">
           <el-icon class="title-icon"><Files /></el-icon>
-          Seleccionar libros para imprimir</h2>
-        <p class="page-subtitle">Arrastra los libros que deseas imprimir a la columna de la derecha</p>
+          Seleccionar libros para imprimir
+        </h2>
+        <p class="page-subtitle">
+          Arrastra los libros que deseas imprimir a la columna de la derecha
+        </p>
       </div>
 
-      <div class="transfer-section">
-        <el-transfer
-          v-model="seleccionados"
-          :data="opciones"
-          filterable
-          filter-placeholder="Buscar libro"
-          :titles="['Libros', 'Para imprimir']"
-          :props="{ key: 'id', label: 'titulo' }"
-          height="300"
-        />
-      </div>
+      <div class="p-4">
+        <el-select v-model="com" placeholder="Select" style="width: 240px">
+          <el-option
+              v-for="i in 15"
+              :key="`COM${i}`"
+              :label="`COM${i}`"
+              :value="`COM${i}`"
+          />
+        </el-select>
 
-      <div class="button-section">
-        <el-button type="primary" size="large" @click="imprimir">
-          Imprimir
+        <el-button type="primary" @click="conectarImpresora">
+          Conectar
         </el-button>
+
+        <el-transfer
+            v-model="seleccionados"
+            :data="opciones"
+            filterable
+            filter-placeholder="Buscar libro"
+            :titles="['Libros', 'Para imprimir']"
+            :props="{ key: 'id', label: 'titulo' }"
+            height="300"
+        />
+
+        <div class="mt-4 flex justify-end">
+          <el-button type="primary" @click="imprimir">
+            Imprimir
+          </el-button>
+        </div>
+
+        <el-dialog v-model="open" title="Impresion en proceso" :close-on-click-modal="false">
+          <div>Imprimiendo.. {{ page }}/{{ total }}</div>
+        </el-dialog>
       </div>
-
-  <div class="p-4">
-    <el-select v-model="com" placeholder="Select" style="width: 240px">
-      <el-option
-          v-for="i in 15"
-          :key="`COM${i}`"
-          :label="`COM${i}`"
-          :value="`COM${i}`"
-      />
-    </el-select>
-    <el-button type="primary" @click="conectarImpresora">Conectar</el-button>
-    <el-transfer
-      v-model="seleccionados"
-      :data="opciones"
-      filterable
-      filter-placeholder="Buscar libro"
-      :titles="['Libros', 'Para imprimir']"
-      :props="{ key: 'id', label: 'titulo' }"
-      height="300"
-    />
-
-    <div class="mt-4 flex justify-end">
-      <el-button type="primary" @click="imprimir">
-        Imprimir
-      </el-button>
-
     </div>
-
-    <el-dialog v-model="open" title="Impresion en proceso" :close-on-click-modal="false" >
-      <div>Imprimiento.. {{page}}/{{total}}</div>
-    </el-dialog>
   </div>
 </template>
 
@@ -66,8 +56,8 @@ import { onMounted, ref } from 'vue';
 const API_URL = 'http://127.0.0.1:8000/libros'
 const API_PRINT = 'http://127.0.0.1:8000/imprimir'
 const open = ref(false)
-const page=ref(0)
-const total=ref(0)
+const page = ref(0)
+const total = ref(0)
 const com = ref('')
 const libros = ref([])
 const seleccionados = ref([])
@@ -96,14 +86,12 @@ async function conectarImpresora() {
 }
 
 function brailleADecimal(char) {
-  // Obtener el código Unicode del caracter
   const code = char.charCodeAt(0) - 0x2800 // offset braille
-  return code // es el decimal
+  return code
 }
 
 function dividirEnLineas(texto) {
   const lineas = []
-  // Eliminamos saltos de línea
   let cleanTexto = texto.replace(/\r?\n/g, '')
   let i = 0
   while (i < cleanTexto.length) {
@@ -111,14 +99,12 @@ function dividirEnLineas(texto) {
     if (chunk.length < 28) {
       chunk = chunk.padEnd(28, ' ')
     }
-    // Convertir cada caracter a decimal braille
     const lineaDecimal = chunk.split('').map(c => brailleADecimal(c)).join(',')
     lineas.push(lineaDecimal)
     i += 28
   }
   return lineas
 }
-
 
 function dividirEnBloques(lineas) {
   const bloques = []
@@ -178,7 +164,7 @@ const imprimir = () => {
     return
   }
   const paraImprimir = libros.value.filter(l =>
-    seleccionados.value.includes(l.id)
+      seleccionados.value.includes(l.id)
   )
   const resultadoFinal = []
   paraImprimir.forEach(libro => {
@@ -195,7 +181,6 @@ onMounted(() => {
   cargarLibros()
 })
 </script>
-
 
 <style scoped>
 .imprimir-fullwidth {
@@ -257,7 +242,6 @@ onMounted(() => {
   margin-top: 1rem;
 }
 
-/* Personalizar el componente Transfer */
 .imprimir-fullwidth :deep(.el-transfer) {
   display: flex;
   justify-content: center;
@@ -319,15 +303,14 @@ onMounted(() => {
 .imprimir-fullwidth :deep(.el-transfer__button) {
   border-radius: 8px;
   font-weight: 500;
-  padding: 18px; 
+  padding: 18px;
   height: 50px;
 }
 
-/* Botón personalizado */
 .imprimir-fullwidth :deep(.el-button--primary) {
   background-color: #27ae60;
   border-color: #27ae60;
-  padding: 20px; 
+  padding: 20px;
   height: 50px;
   font-size: 20px;
 }
@@ -343,25 +326,22 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-/* Tamaño del cuadro de búsqueda */
 .imprimir-fullwidth :deep(.el-transfer-panel__filter .el-input__wrapper) {
   border-radius: 12px;
   margin: 16px;
   width: calc(100% - 32px);
-  height: 50px !important; 
+  height: 50px !important;
 }
 
-/* Tamaño de letra del input y placeholder */
 .imprimir-fullwidth :deep(.el-transfer-panel__filter .el-input__inner) {
-  font-size: 18px !important; 
-  height: 45px !important; 
+  font-size: 18px !important;
+  height: 45px !important;
   line-height: 45px !important;
 }
 
-/* Placeholder específico */
 .imprimir-fullwidth :deep(.el-transfer-panel__filter .el-input__inner::placeholder) {
   font-size: 18px !important;
-  color: #a0a0a0 !important; 
+  color: #a0a0a0 !important;
 }
 
 :deep(.el-transfer-panel__header) {
@@ -372,5 +352,4 @@ onMounted(() => {
   font-size: 20px !important;
   font-weight: 700 !important;
 }
-
 </style>

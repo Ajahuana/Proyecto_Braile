@@ -9,6 +9,12 @@ import json
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 class ConexionRequest(BaseModel):
     com: str
 
@@ -36,12 +42,7 @@ class ImpresoraBraile:
 
 
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 
 @app.post("/conectar")
 def conectar_impresora(data: ConexionRequest):
