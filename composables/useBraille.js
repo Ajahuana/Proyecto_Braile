@@ -38,7 +38,7 @@ export function useBraille(textoInicial = "") {
         ó: "⠬",
         ú: "⠾",
         ü: "⠳",
-        " ": "⠿", // espacio como “cero” Braille
+        " ": " ", // espacio como “cero” Braille
         1: "⠁",
         2: "⠃",
         3: "⠉",
@@ -94,7 +94,7 @@ export function useBraille(textoInicial = "") {
         "₿": ["⠸", "⠃"],
     };
 
-    const mayuscula = "⠠";
+    const mayuscula = "⠨";
     const numero = "⠼";
     const longitudLinea = 29; // longitud máxima de línea
 
