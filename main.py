@@ -11,6 +11,8 @@ import tempfile
 import os
 import docx2txt
 import fitz  # PyMuPDF para PDF
+import asyncio
+from fastapi import HTTPException
 app = FastAPI()
 
 # -------------------------------
@@ -166,17 +168,36 @@ def update_libro(libro_id: int, libro: dict):
     conn.close()
     return {"success": True}
 
-@app.delete("/libros")
-def delete_libro(libro: dict):
+@app.delete("/libros/{libro_id}")
+def delete_libro_id(libro_id: int):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("DELETE FROM libros WHERE id=?", (libro.get("id"),))
-    if c.rowcount == 0:
+
+    # Obtener el libro antes de eliminar
+    c.execute("SELECT titulo, autor FROM libros WHERE id=?", (libro_id,))
+    row = c.fetchone()
+    if row is None:
         conn.close()
         raise HTTPException(status_code=404, detail="Libro no encontrado")
+
+    titulo, autor = row
+    print(f"🗑️ Eliminando libro ID {libro_id}: '{titulo}' de {autor}")
+
+    # Eliminar el libro
+    c.execute("DELETE FROM libros WHERE id=?", (libro_id,))
     conn.commit()
     conn.close()
-    return {"success": True}
+
+    print(f"✅ Libro ID {libro_id} eliminado correctamente")
+
+    return {
+        "success": True,
+        "mensaje": f"Libro '{titulo}' de {autor} eliminado correctamente",
+        "id": libro_id,
+        "titulo": titulo,
+        "autor": autor
+    }
+
 
 @app.get("/libros/{libro_id}")
 def get_libro(libro_id: int):
@@ -199,40 +220,74 @@ def get_libro(libro_id: int):
 # -------------------------------
 # 🖨️ Endpoint de impresión
 # -------------------------------
-@app.post("/imprimir")
-async def imprimir_bloque(bloque: dict):
-    """
-    Recibe un bloque JSON, lo envía a la impresora
-    y espera hasta recibir "TRUE".
-    """
-    print("📥 Recibido bloque:", bloque)
 
+
+@app.post("/imprimir")
+async def imprimir_bloque(payload: dict):
+    """
+    Recibe un bloque JSON, envía cada línea a la impresora con 1 s de pausa
+    y espera confirmación "TRUE".
+    Formato esperado:
+      { "bloque": [ { "pag": 0, "id": 1, "linea": "...", "total": 5 }, ... ] }
+    """
+    print("📥 Recibido bloque:", payload)
+
+    # Validación de estructura
+    lineas = payload.get("bloque", payload)
+    if not isinstance(lineas, list) or not lineas:
+        raise HTTPException(status_code=400, detail="Se esperaba 'bloque' como lista no vacía.")
+
+    # Conexión serie
     if not impresora.conexion_serie or not impresora.conexion_serie.is_open:
         result = impresora.conectar()
         if not result.get("success"):
             raise HTTPException(status_code=500, detail=result.get("mensaje"))
-
     if not impresora.conexion_serie or not impresora.conexion_serie.is_open:
-        raise HTTPException(status_code=500, detail="No hay conexión con la impresora")
+        raise HTTPException(status_code=501, detail="No hay conexión con la impresora")
+
+    # Tomar metadatos de página para logging (del primer item)
+    total_paginas = lineas[0].get("total", 1)
+    pagina_idx_0b = lineas[0].get("pag", 0)  # 0-based en el JSON
+    print(f"🖨️ Enviando página {pagina_idx_0b + 1} de {total_paginas}... ({len(lineas)} líneas)")
 
     try:
-        # Enviar bloque como JSON
-        json_str = json.dumps(bloque)
-        impresora.conexion_serie.write(json_str.encode())
-        impresora.conexion_serie.write("|\n")
+        # Envío línea por línea con pausa de 1s
+        for idx, ln in enumerate(lineas, start=1):
+            data = {
+                # ⚠️ Se respetan los valores que llegan por línea:
+                "pag": ln.get("pag", pagina_idx_0b),
+                "id": ln.get("id", idx),
+                "linea": ln.get("linea", ""),
+                "total": ln.get("total", total_paginas),
+            }
+
+            json_str = json.dumps(data)
+            impresora.conexion_serie.write(json_str.encode())
+            impresora.conexion_serie.write(b"|\n")
+            print(f"   • Línea {idx}/{len(lineas)} enviada (pag={data['pag']} total={data['total']})")
+
+            # Pausa de 1 segundo entre líneas
+            await asyncio.sleep(1)
+
+        print(f"📦 Datos de la página {pagina_idx_0b + 1}/{total_paginas} enviados. Esperando confirmación...")
+
+        # Esperar confirmación "TRUE"
+        while True:
+            if impresora.conexion_serie.in_waiting > 0:
+                mensaje = impresora.conexion_serie.readline().decode(errors="ignore").strip()
+                if mensaje == "true":
+                    print(f"✅ Página {pagina_idx_0b + 1} de {total_paginas} impresa correctamente")
+                    return {"status": "ok", "mensaje": f"Página {pagina_idx_0b + 1} de {total_paginas} impresa correctamente"}
+                else:
+                    print("📤 Mensaje recibido:", mensaje)
+
+    except serial.SerialException as e:
+        print(f"⚠️ Error de comunicación serial: {e}")
+        raise HTTPException(status_code=502, detail=f"Error de comunicación serial: {e}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al enviar datos: {e}")
+        print(f"❌ Error interno en /imprimir:", e)
+        raise HTTPException(status_code=500, detail=f"Error interno: {e}")
 
-    print("⏳ Esperando respuesta de la impresora...")
-
-    while True:
-        if impresora.conexion_serie.in_waiting > 0:
-            mensaje = impresora.conexion_serie.readline().decode(errors="ignore").strip()
-            if mensaje == "TRUE":
-                print("✅ Impresión confirmada")
-                return {"status": "ok", "mensaje": "Bloque impreso correctamente"}
-            else:
-                print("📤 Mensaje recibido:", mensaje)
 
 # -------------------------------
 #  Endpoint de cargado de archivos
@@ -271,6 +326,9 @@ async def upload_file(file: UploadFile = File(...)):
             "filename": file.filename,
             "content": content
         }
+    
+
+    
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al procesar archivo: {str(e)}")

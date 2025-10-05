@@ -190,7 +190,7 @@ function dividirEnBloques(lineas) {
         }
         bloques.push(
             bloque.map((linea, idx) => ({
-                id: idx + 1,
+                id: idx,
                 linea,
             }))
         );
@@ -217,12 +217,21 @@ const enviarBloques = async (bloques) => {
     open.value = true;
     for (let i = 0; i < bloques.length; i++) {
         page.value = i + 1;
+
+        // 🔧 Añadir campos "pag" y "total" a cada línea del bloque
+        const bloqueConInfo = bloques[i].map((lineaObj) => ({
+            ...lineaObj,
+            pag: i,
+            total: bloques.length,
+        }));
+
         try {
             const res = await fetch(API_PRINT, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ bloque: bloques[i] }),
+                body: JSON.stringify({ bloque: bloqueConInfo }),
             });
+
             const data = await res.json();
             console.log(`✅ Respuesta bloque ${i + 1}:`, data);
             ElMessage.success(`Bloque ${i + 1} impreso correctamente`);

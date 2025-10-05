@@ -80,7 +80,7 @@ export function useBraille(textoInicial = "") {
         "+": "⠖",
         "=": "⠶",
         "%": "⠨⠴",
-        "@": "⠈⠁",
+        "@": "⠐",
     };
 
     const monedas_braille = {
@@ -104,51 +104,87 @@ export function useBraille(textoInicial = "") {
 
         // Traducción carácter por carácter
         let traducidoRaw = "";
-        for (let i = 0; i < libro.value.length; i++) {
-            let char = libro.value[i];
+        const palabras_entrada = libro.value.split(/(\s+)/); // incluye espacios, tabs, saltos de línea como elementos
 
-            // Detectar monedas (ej: Bs, R$, DM)
-            let moneda = null;
-            for (const key in monedas_braille) {
-                if (libro.value.startsWith(key, i)) {
-                    moneda = monedas_braille[key].join("");
-                    i += key.length - 1; // avanzar índice
-                    break;
+        for (let palabra of palabras_entrada) {
+            if (palabra.trim() === "") {
+                traducidoRaw += palabra; // espacios, tabs, saltos
+                continue;
+            }
+
+            // Verificar si es número puro
+            if (/^\d+$/.test(palabra)) {
+                for (let digito of palabra) {
+                    traducidoRaw +=
+                        numero + (diccionarioBraille[digito] || digito);
                 }
-            }
-            if (moneda) {
-                traducidoRaw += moneda;
-                enNumero = false;
                 continue;
             }
 
-            // Mayúscula
-            if (char.toUpperCase() === char && char.toLowerCase() !== char) {
-                traducidoRaw +=
-                    mayuscula +
-                    (diccionarioBraille[char.toLowerCase()] || char);
-                enNumero = false;
+            // Verificar si es palabra totalmente en mayúsculas (mínimo 2 letras)
+            if (
+                palabra.length > 1 &&
+                palabra === palabra.toUpperCase() &&
+                /[A-ZÁÉÍÓÚÜÑ]/.test(palabra)
+            ) {
+                traducidoRaw += mayuscula + mayuscula;
+                for (let char of palabra.toLowerCase()) {
+                    traducidoRaw +=
+                        diccionarioBraille[char] ||
+                        simbolos_braille[char] ||
+                        char;
+                }
                 continue;
             }
 
-            // Número
-            if (/[0-9]/.test(char)) {
-                if (!enNumero) {
-                    traducidoRaw += numero;
+            // Mixto o minúsculas normales
+            let enNumero = false;
+            for (let i = 0; i < palabra.length; i++) {
+                const char = palabra[i];
+
+                // Monedas
+                let moneda = null;
+                for (const key in monedas_braille) {
+                    if (palabra.startsWith(key, i)) {
+                        moneda = monedas_braille[key].join("");
+                        i += key.length - 1;
+                        break;
+                    }
+                }
+                if (moneda) {
+                    traducidoRaw += moneda;
+                    enNumero = false;
+                    continue;
+                }
+
+                // Números individuales
+                if (/[0-9]/.test(char)) {
+                    traducidoRaw += numero + (diccionarioBraille[char] || char);
                     enNumero = true;
+                    continue;
+                } else {
+                    enNumero = false;
                 }
-                traducidoRaw += diccionarioBraille[char] || char;
-                continue;
-            } else {
-                enNumero = false;
-            }
 
-            // Símbolos
-            if (simbolos_braille[char]) {
-                traducidoRaw += simbolos_braille[char];
-            } else {
-                // Letras y otros
-                traducidoRaw += diccionarioBraille[char.toLowerCase()] || char;
+                // Mayúscula individual
+                if (
+                    char.toUpperCase() === char &&
+                    char.toLowerCase() !== char
+                ) {
+                    traducidoRaw +=
+                        mayuscula +
+                        (diccionarioBraille[char.toLowerCase()] || char);
+                    continue;
+                }
+
+                // Símbolo
+                if (simbolos_braille[char]) {
+                    traducidoRaw += simbolos_braille[char];
+                    continue;
+                }
+
+                // Letra minúscula
+                traducidoRaw += diccionarioBraille[char] || char;
             }
         }
 
