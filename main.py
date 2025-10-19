@@ -249,7 +249,8 @@ async def imprimir_bloque(payload: dict):
     total_paginas = lineas[0].get("total", 1)
     pagina_idx_0b = lineas[0].get("pag", 0)  # 0-based en el JSON
     print(f"🖨️ Enviando página {pagina_idx_0b + 1} de {total_paginas}... ({len(lineas)} líneas)")
-
+    await asyncio.sleep(2)
+    impresora.conexion_serie.write(b"enviando\n|")
     try:
         # Envío línea por línea con pausa de 1s
         for idx, ln in enumerate(lineas, start=1):
@@ -267,7 +268,7 @@ async def imprimir_bloque(payload: dict):
             print(f"   • Línea {idx}/{len(lineas)} enviada (pag={data['pag']} total={data['total']})")
 
             # Pausa de 1 segundo entre líneas
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.1)
 
         print(f"📦 Datos de la página {pagina_idx_0b + 1}/{total_paginas} enviados. Esperando confirmación...")
 

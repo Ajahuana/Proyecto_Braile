@@ -30,15 +30,30 @@
                     Conectar
                 </el-button>
 
-                <el-transfer
-                    v-model="seleccionados"
-                    :data="opciones"
-                    filterable
-                    filter-placeholder="Buscar libro"
-                    :titles="['Libros', 'Para imprimir']"
-                    :props="{ key: 'id', label: 'titulo' }"
-                    height="300"
-                />
+                <div style="position: relative">
+                    <el-button
+                        type="info"
+                        @click="reporteVisible = true"
+                        style="
+                            position: absolute;
+                            top: -50px;
+                            right: 0;
+                            z-index: 10;
+                        "
+                    >
+                        📊 Reporte
+                    </el-button>
+
+                    <el-transfer
+                        v-model="seleccionados"
+                        :data="opciones"
+                        filterable
+                        filter-placeholder="Buscar libro"
+                        :titles="['Libros', 'Para imprimir']"
+                        :props="{ key: 'id', label: 'titulo' }"
+                        height="300"
+                    />
+                </div>
 
                 <div class="mt-4 flex justify-end">
                     <el-button type="primary" @click="imprimir">
@@ -52,6 +67,51 @@
                     :close-on-click-modal="false"
                 >
                     <div>Imprimiendo... {{ page }}/{{ total }}</div>
+                </el-dialog>
+
+                <!--Dialog de Reporte -->
+                <el-dialog
+                    v-model="reporteVisible"
+                    title="📊 Reporte de Impresiones"
+                    width="500px"
+                >
+                    <div class="reporte-container">
+                        <div class="reporte-item">
+                            <div class="reporte-label">
+                                📚 Cantidad de textos impresos:
+                            </div>
+                            <div class="reporte-valor">
+                                {{ estadisticas.textosImpresos }}
+                            </div>
+                        </div>
+
+                        <div class="reporte-item">
+                            <div class="reporte-label">
+                                📄 Cantidad de hojas impresas:
+                            </div>
+                            <div class="reporte-valor">
+                                {{ estadisticas.hojasImpresas }}
+                            </div>
+                        </div>
+
+                        <div class="reporte-item">
+                            <div class="reporte-label">
+                                🔤 Cantidad de caracteres impresos:
+                            </div>
+                            <div class="reporte-valor">
+                                {{ estadisticas.caracteresImpresos }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <template #footer>
+                        <el-button @click="reporteVisible = false">
+                            Cerrar
+                        </el-button>
+                        <el-button type="danger" @click="resetearEstadisticas">
+                            Resetear Estadísticas
+                        </el-button>
+                    </template>
                 </el-dialog>
             </div>
         </div>
@@ -73,6 +133,14 @@ const com = ref("");
 const libros = ref([]);
 const seleccionados = ref([]);
 const opciones = ref([]);
+
+// Variables para el reporte
+const reporteVisible = ref(false);
+const estadisticas = ref({
+    textosImpresos: 1,
+    hojasImpresas: 10,
+    caracteresImpresos: 50,
+});
 
 async function conectarImpresora() {
     try {
@@ -235,6 +303,11 @@ const enviarBloques = async (bloques) => {
             const data = await res.json();
             console.log(`✅ Respuesta bloque ${i + 1}:`, data);
             ElMessage.success(`Bloque ${i + 1} impreso correctamente`);
+            // Incrementar hojas impresas
+            estadisticas.value.hojasImpresas++;
+
+            // Calcular caracteres del bloque (28 caracteres por línea * 30 líneas)
+            estadisticas.value.caracteresImpresos += 840; // 28 * 30
         } catch (err) {
             console.error(err);
             ElMessage.error(`Error al imprimir bloque ${i + 1}`);
@@ -249,6 +322,10 @@ const imprimir = () => {
         ElMessage.warning('No hay libros en la lista de "Para imprimir"');
         return;
     }
+
+    // Incrementar contador de textos impresos
+    estadisticas.value.textosImpresos++;
+
     const paraImprimir = libros.value.filter((l) =>
         seleccionados.value.includes(l.id)
     );
@@ -261,6 +338,16 @@ const imprimir = () => {
     console.log("📄 Resultado final para impresión:", resultadoFinal);
 
     enviarBloques(resultadoFinal);
+};
+
+// Función para resetear estadísticas
+const resetearEstadisticas = () => {
+    estadisticas.value = {
+        textosImpresos: 10,
+        hojasImpresas: 10,
+        caracteresImpresos: 50,
+    };
+    ElMessage.success("Estadísticas reseteadas a valores iniciales");
 };
 
 onMounted(cargarLibros);
@@ -430,5 +517,47 @@ onMounted(cargarLibros);
 :deep(.el-transfer-panel__header span) {
     font-size: 20px !important;
     font-weight: 700 !important;
+}
+
+/* 📊 Estilos del reporte */
+.reporte-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 10px;
+}
+
+.reporte-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    border-radius: 10px;
+    border-left: 4px solid #4e94c0;
+    transition: transform 0.2s ease;
+}
+
+.reporte-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.reporte-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.reporte-valor {
+    font-size: 24px;
+    font-weight: 700;
+    color: #4e94c0;
+    background: white;
+    padding: 8px 20px;
+    border-radius: 8px;
+    min-width: 80px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>
